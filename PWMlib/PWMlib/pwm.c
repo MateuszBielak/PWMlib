@@ -1,21 +1,18 @@
-/*	Programowa obs³uga modulacji szerokoœci¹ impulsu PWM
- * 	Znajdzie zastosowanie w sterowaniu jasnoœci¹ oœwietlenia, sterowaniem
- * 	diodami wielokolorowymi RGB, sterowaniu silnikami elektrycznymi DC,
- * 	serwomechanizmam i nie tylko.
+/*  Library for software and hardware PWM operating for AVR uC.
+ * 	It can be used in light brightness adjustment, controlling DC motor's speed or
+ * 	as in example controlling RGB LED
  *
- * 	Umo¿liwia sterowanie zarówno za pomoc¹ GND (urz¹dzenie w³¹czone w trakcie
- * 	trwania stanu niskiego) lub VCC (urz¹dzenie w³¹czone w trakcie trwania
- * 	stanu wysokiego)
+ *	Allows using soft and hard PWM in inverting mode or non-inverting mode
  *
- *  ZALECANE TAKTOWANIE PROCESORA TO 16MHZ (dla innych wymagane zmiany w
- *  ustawieniach timerów)
+ *  I recommend using 16MHZ crystal
  *
- *	WYMAGANE WYWYO£ANIE FUNKCJI sei() w pliku main.c
+ *  Required use function sei() in main.c
  *
- * 	WYMAGANE BIBLIOTEKI : <avr/io.h> <avr/interrupt.h>
+ * 	Libraries required : <avr/io.h> <avr/interrupt.h>
+ *
  *  Created on: 3 oct 2019
  *      Author: Norbert Bielak
- * 	pwm.c
+ *	pwm.c
  */
 
 
@@ -27,7 +24,7 @@
 #include "pwm.h"
 typedef uint8_t u8;
 typedef uint16_t u16;
- // zmienne u¿ywane w przerwaniu
+ // variables used in interrupt
 volatile u8 pwm1, pwm2, pwm3, pwm4;
 
 
@@ -48,33 +45,34 @@ static inline void soft_pwm_dir_out(void){
 }
 
 // -------------------------------------------------------------------
-//						INICJALIZACJA PWM
+//							PWM INIT
 // -------------------------------------------------------------------
 #if USE_SOFT_PWM == 1
 void soft_PWM_init(void){
-	// kana³y PWM - wyjœcie
+	// PWM channels - output
 	soft_pwm_dir_out();
-//-----------------------USTAWIENIA TIMERA----------------------------
-	//Tryb NORMAL
-	TCCR0 |= (1<<CS00); // preskaler /1
-	TIMSK |= (1<<TOIE0); // zezwolenie na przerwania OVF
+
+
+	// Timer mode - normal
+	TCCR0 |= (1<<CS00); // prescaler /1
+	TIMSK |= (1<<TOIE0); // OVF interrupts permission
 	TCNT0 = 100;
 
 }
 #endif
 
- 	 	 // sprzêtowy kana³ PWM
-#if USE_PWM_HARDWARE_CHANNEL == 1
+ 	 	 // hardware PWM
+#if USE_HARD_PWM == 1
 void hard_PWM_init(void){
 	DDR(HARD_PWM_PORT) |= (1<<HARD_PWM_PIN);
-	TCCR2 |= (1<<WGM20) | (1<<WGM21); // tryb fastPWM
-	TCCR2 |= (1<<CS20); // preskaler /1
-	TCCR2 |= (1<<COM21); // Sterowanie VCC
+	TCCR2 |= (1<<WGM20) | (1<<WGM21); //  fastPWM mode
+	TCCR2 |= (1<<CS20); // prescaler /1
+	TCCR2 |= (1<<COM21); // non-inverting mode
 	OCR2 = 0;
 }
 #endif
 //---------------------------------------------------------------------
-//						PROCEDURY PRZERWAÑ
+//							ISR
 //---------------------------------------------------------------------
 
 ISR( TIMER0_OVF_vect ) {
@@ -108,12 +106,12 @@ ISR( TIMER0_OVF_vect ) {
 
 
 //--------------------------------------------------------------------
-//					FUNKCJE DOSTÊPNE DLA U¯YTKOWNIKA
+//					    FUNCTIONS FOR USERS
 //--------------------------------------------------------------------
-	// ustawianie wype³nienia pwm na poszczególnych kana³ach
+	// Width setting on each channels
 #if USE_SOFT_PWM == 1
 void soft_PWM_write(u8 channel, u16 width){
-#if GND_VCC_ON_SWITCH == 0 // wspólna anoda np
+#if GND_VCC_ON_SWITCH == 0 // inverting mode (common anode)
 	  width = 255-width;
 #endif
 	switch(channel){
@@ -124,8 +122,8 @@ void soft_PWM_write(u8 channel, u16 width){
 	}
 }
 #endif
-	// ustawianie wype³nienia na sprzêtowym kanale PWM
-#if USE_PWM_HARDWARE_CHANNEL == 1
+	// Width setting on hardware channel
+#if USE_HARD_PWM == 1
 void hard_PWM_write(u8 width){
 #if GND_VCC_ON_SWITCH == 0
 	width = 255-width;

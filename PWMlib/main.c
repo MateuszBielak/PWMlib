@@ -1,27 +1,28 @@
-/*	Programowa obs³uga modulacji szerokoœci¹ impulsu PWM
- * 	Znajdzie zastosowanie w sterowaniu jasnoœci¹ oœwietlenia, sterowaniem
- * 	diodami wielokolorowymi RGB, sterowaniu silnikami elektrycznymi DC,
- * 	serwomechanizmam i nie tylko.
+/*  Library for software and hardware PWM operating for AVR uC.
+ * 	It can be used in light brightness adjustment, controlling DC motor's speed or
+ * 	as in example RGB LED control
  *
- * 	Umo¿liwia sterowanie zarówno za pomoc¹ GND (urz¹dzenie w³¹czone w trakcie
- * 	trwania stanu niskiego) lub VCC (urz¹dzenie w³¹czone w trakcie trwania
- * 	stanu wysokiego)
+ *	Allows using soft and hard PWM in inverting mode or non-inverting mode
  *
- *  ZALECANE TAKTOWANIE PROCESORA TO 16MHZ (dla innych wymagane zmiany w
- *  ustawieniach timerów)
+ *  I recommend using 16MHZ crystal.
  *
- * 	WYMAGANE BIBLIOTEKI : <avr/io.h> <avr/interrupt.h>
+ *  Required use function sei() in main.c
  *
- * 	WYMAGANE WYWYO£ANIE FUNKCJI sei() w pliku main.c
+ * 	Libraries required : <avr/io.h> <avr/interrupt.h>
  *
- * 	Rozmiar biblioteki z przyk³adowym programem po kompilacji to 622 bajty
- * 	Dla porównania, podobny program w Arduino zajmuje dwukrotnie wiêcej pamiêci flash
- * 	Procesor u¿yty w projekcje to ATmega32
+ *  The library takes about 600 bytes of FLASH memory with sample program
+ *  for all 4 software channels and hardware channel active.
+ *
+ *  MCU used in project is ATmega32
  *
  *  Created on: 3 oct 2019
  *      Author: Norbert Bielak
  *	main.c
  */
+
+//---------------------------------------------------------------------------------
+// 								SAMPLE PROGRAM
+//---------------------------------------------------------------------------------
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -39,9 +40,6 @@ void color_set(u8 red, u8 green, u8 blue);
 void color_hex(u32 hex_color);
 
 
-//------------------------------------------------------------------------------------
-//								FUNKCJE DLA DIODY RGB
-//------------------------------------------------------------------------------------
 
 void color_set(u8 red, u8 green, u8 blue){
 	soft_PWM_write(RED_CH, red);
@@ -62,8 +60,8 @@ sei();
 
 
  while(1){
-// dioda swieci siê wszystkimi kolorami palety RGB
-//
+// diode lights in all RGB colors
+
 	  for (u16 i = 0; i <= 255; i++) {
 		 color_set(255 - i, i, 0);
 		 hard_PWM_write(i);
